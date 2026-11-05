@@ -1,0 +1,179 @@
+[project]
+name = "kestrel"
+version = "0.1.0"
+description = "Backtest, validate, and paper-trade strategies across crypto and US equities, and find out when your backtest is lying."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Ahmad Sohail" }]
+keywords = ["backtesting", "paper-trading", "quant", "crypto", "equities"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+  "pandas>=2.2,<4",
+  "numpy>=1.26,<3",
+  "pyarrow>=15",
+  "pydantic>=2.6,<3",
+  "pydantic-settings>=2.2,<3",
+  "pyyaml>=6.0",
+  "typer>=0.12",
+  "rich>=13.7",
+  "structlog>=24.1",
+  "httpx>=0.27",
+  "apscheduler>=3.10,<4",
+  "ccxt>=4.3",
+  "alpaca-py>=0.30",
+  "jinja2>=3.1",
+  "plotly>=5.20",
+  "python-telegram-bot>=21.0",
+  "pandas-market-calendars>=4.4",
+]
+
+[project.optional-dependencies]
+ml = ["lightgbm>=4.3", "scikit-learn>=1.4"]
+research = ["yfinance>=0.2.40"]
+
+[project.urls]
+Homepage = "https://github.com/FadelJD/quant-bot"
+Issues = "https://github.com/FadelJD/quant-bot/issues"
+
+[project.scripts]
+kestrel = "kestrel.cli:app"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "pytest-xdist>=3.6",
+  "pytest-benchmark>=4.0",
+  "hypothesis>=6.100",
+  "freezegun>=1.5",
+  "respx>=0.21",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "pre-commit>=3.7",
+  "import-linter>=2.0",
+  "detect-secrets>=1.5",
+  "pandas-stubs>=2.2",
+  "types-PyYAML>=6.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kestrel"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/kestrel", "README.md", "LICENSE", "configs"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",      # pycodestyle, pyflakes
+  "I",                # isort
+  "UP",               # pyupgrade
+  "B",                # bugbear
+  "N",                # pep8-naming
+  "D",                # pydocstyle
+  "DTZ",              # naive datetimes are a lint error (spec section 5)
+  "SIM",              # simplify
+  "RUF",              # ruff-specific
+  "T20",              # no stray print() in library code
+]
+ignore = [
+  "D100", "D104", "D105", "D107",  # module/package/magic/__init__ docstrings
+  "D203", "D213",                  # incompatible pairs; we use D211/D212
+  "RUF012",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "T20", "DTZ"]
+"scripts/**" = ["D", "T20"]
+"src/kestrel/cli.py" = ["T20"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["kestrel"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["kestrel"]
+mypy_path = "src"
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+  "ccxt.*", "alpaca.*", "lightgbm.*", "sklearn.*", "plotly.*",
+  "pandas_market_calendars.*", "telegram.*", "apscheduler.*", "yfinance.*",
+  "pyarrow.*", "structlog.*",
+]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -p no:cacheprovider"
+markers = [
+  "unit: fast tests, no network, no disk beyond tmp_path (default)",
+  "integration: mock adapters and SimClock, may take up to two minutes",
+  "contract: real paper endpoints; only with KESTREL_INTEGRATION=1, never in CI",
+  "slow: long-running tests",
+  "benchmark: performance tests",
+]
+filterwarnings = [
+  "error::kestrel.errors.NaiveDatetimeWarning",
+]
+
+[tool.coverage.run]
+source = ["src/kestrel"]
+branch = true
+omit = ["src/kestrel/integrations/_providers.py"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "\\.\\.\\.$", "raise NotImplementedError"]
+show_missing = true
+
+# ---------------------------------------------------------------- import-linter
+[tool.importlinter]
+root_package = "kestrel"
+
+[[tool.importlinter.contracts]]
+name = "strategies never import execution or live"
+type = "forbidden"
+source_modules = ["kestrel.strategies"]
+forbidden_modules = ["kestrel.execution", "kestrel.live", "kestrel.notify", "kestrel.integrations"]
+
+[[tool.importlinter.contracts]]
+name = "numeric layers never import side-effect layers"
+type = "forbidden"
+source_modules = ["kestrel.features", "kestrel.backtest", "kestrel.validation", "kestrel.reporting.metrics"]
+forbidden_modules = ["kestrel.execution", "kestrel.live", "kestrel.notify", "kestrel.integrations"]
+
+[[tool.importlinter.contracts]]
+name = "integrations never feed decisions"
+type = "forbidden"
+source_modules = ["kestrel.strategies", "kestrel.risk", "kestrel.backtest", "kestrel.live.runner"]
+forbidden_modules = ["kestrel.integrations"]

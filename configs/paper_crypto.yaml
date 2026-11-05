@@ -1,0 +1,30 @@
+market: crypto
+timeframe: 1h
+universe: crypto_top20
+adapter:
+  kind: ccxt          # binance | bybit | okx sandbox; keys from KESTREL_CCXT_API_KEY / _SECRET
+  exchange: binance
+data:
+  source: ccxt
+  exchange: binance
+  allow_gaps: true
+strategy:
+  name: sma_cross
+  params: { fast: 20, slow: 50 }
+risk:
+  max_weight_per_symbol: 0.25
+  max_daily_loss: 0.03
+  max_drawdown: 0.15
+backtest:            # used for the validation gate and initial equity reference
+  start: 2024-01-01
+  end: 2025-12-31
+  initial_cash: 10000
+live:
+  order_timeout_s: 60
+  daily_report_time: "08:00"
+notify:
+  kind: auto          # telegram if KESTREL_TELEGRAM_TOKEN is set, else null
+integrations:
+  llm: { enabled: false }
+  news: { enabled: false }
+display_tz: Asia/Bangkok

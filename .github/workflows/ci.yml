@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main, develop, "claude/**", "feat/**"]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-extras --python ${{ matrix.python }}
+      - name: Secrets scan
+        shell: bash
+        run: uv run detect-secrets scan --baseline .secrets.baseline --exclude-files 'uv\.lock' --exclude-files 'tests/fixtures/.*\.parquet'
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy --strict
+      - name: Import boundaries
+        run: uv run lint-imports
+      - name: Tests
+        run: uv run pytest -m "unit or integration" --cov --cov-report=xml --cov-report=term --cov-fail-under=85 -n auto
+      - name: CLI smoke
+        run: uv run kestrel --help
+
+  benchmark:
+    name: benchmark (ubuntu)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Install
+        run: uv sync --all-extras --python 3.12
+      - name: Backtest benchmark (60 s target)
+        run: uv run pytest -m benchmark --benchmark-only --benchmark-max-time=1

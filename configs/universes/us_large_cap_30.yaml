@@ -1,0 +1,35 @@
+# 30 large-cap US equities, as of 2026-11-05. Static list; survivorship bias applies.
+market: equities
+as_of: "2026-11-05"
+note: "Owner to confirm (OWNER_TODO)."
+symbols:
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - GOOGL
+  - META
+  - BRK.B
+  - TSLA
+  - AVGO
+  - JPM
+  - LLY
+  - V
+  - UNH
+  - XOM
+  - MA
+  - COST
+  - HD
+  - PG
+  - JNJ
+  - WMT
+  - NFLX
+  - ABBV
+  - BAC
+  - CRM
+  - ORCL
+  - KO
+  - CVX
+  - MRK
+  - AMD
+  - PEP

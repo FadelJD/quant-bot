@@ -1,0 +1,20 @@
+market: crypto
+timeframe: 1d
+universe: crypto_top20
+data:
+  source: ccxt
+  exchange: binance
+  allow_gaps: true
+strategy:
+  name: sma_cross
+  params: { fast: 20, slow: 50 }
+risk:
+  max_weight_per_symbol: 0.25
+  max_gross_exposure: 1.0
+backtest:
+  start: 2022-01-01
+  end: 2025-12-31
+  initial_cash: 100000
+  fees: { rate_bps: 10 }
+  slippage: { base_bps: 5, impact_k: 0.1, cap_bps: 50 }
+display_tz: Asia/Bangkok

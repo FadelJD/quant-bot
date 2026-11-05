@@ -1,0 +1,40 @@
+kestrel build progress (2026-11-05)
+====================================
+
+Branch: claude/new-session-u3eief (owner asked to pause testing and push what exists)
+
+DONE (source written, NOT yet tested or linted; the user asked to stop before verification)
+- pyproject.toml (uv, hatchling, ruff, mypy --strict, pytest markers, import-linter contracts)
+- CI workflow (.github/workflows/ci.yml), pre-commit config, .env.example (names only), LICENSE (MIT), .gitignore
+- src/kestrel/
+    errors.py, clock.py (RealClock, SimClock), logsetup.py (structlog + secret redaction), config.py (pydantic RunConfig + Secrets)
+    data/        schema + validation, synthetic generator, parquet cache + manifest, universes, calendar, token bucket, fetchers (ccxt, alpaca, yfinance, fixtures, synthetic), DataService
+    features/    registry with lookbacks, causal indicators (sma, ema, macd, adx, boll, rsi, zscore, vol, volz, regimes), cross-sectional, builder
+    strategies/  base contract + registry, sma_cross, boll_revert, xs_rank (LightGBM, embargoed training)
+    backtest/    fill model (slippage, fees, participation cap, lot rounding), portfolio, engine (next-open fills), runner
+    risk/        sizing (fixed / vol target), limits, RiskEngine (daily loss, drawdown, adapter-error streak, stale data, halt)
+    validation/  walk-forward, purged k-fold, deflated Sharpe, sensitivity, Monte Carlo, block bootstrap, memorisation check, verdict, runner
+    execution/   protocol, paper-only safety gate, MockAdapter (scriptable), CcxtAdapter (sandbox), AlpacaAdapter (paper), Bitkub stub
+    live/        SQLite state store (WAL), lock file, reconciler, kill switch, LiveRunner, APScheduler wiring
+    reporting/   metrics, JSON export, HTML report (Jinja2 + Plotly)
+    notify/      Notifier protocol, null/console, rate limiter, Telegram notifier + command handlers (injected transport)
+    integrations/ llm.py (Anthropic/OpenAI over httpx, budget), news.py
+    cli.py       init, doctor, data fetch/check, backtest, validate, sweep, run, halt, resume, state show, report, strategies list/schema
+- configs/ (backtest_crypto, backtest_equities, paper_crypto, paper_equities, quickstart_synthetic, universes)
+- scripts/ (fetch_fixtures.py for the owner, make_fixtures.py synthetic), tests/fixtures/overfit_strategy.py
+
+NOT DONE
+- No tests written (owner asked to pause testing). tests/ holds only the overfit fixture.
+- Nothing has been run: expect import errors, lint and mypy failures on first run.
+- uv.lock not generated. No parquet fixtures committed. Docs (README, ARCHITECTURE, KNOWLEDGE_BASE,
+  strategies, runbook, thailand, integrations) are stubs only. No release/tag.
+
+ENVIRONMENT NOTES
+- Market data hosts (Binance, Bybit, Alpaca, Yahoo) are blocked from this build container; only
+  package indexes are reachable. Fixtures therefore must be synthetic until the owner runs
+  scripts/fetch_fixtures.py locally.
+
+NEXT STEPS (in order)
+1. uv sync; fix import/lint/mypy errors; generate uv.lock.
+2. Write the unit test suite per spec section 17 (backtest 5-bar hand scenario, no-lookahead, risk property tests, safety allowlist, live 7-day SimClock run).
+3. Fill docs; run `kestrel backtest --config configs/quickstart_synthetic.yaml` end to end.

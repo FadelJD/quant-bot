@@ -1,0 +1,16 @@
+# Quickstart: no accounts, no network. Synthetic bars, three strategies to try.
+market: crypto
+timeframe: 1d
+universe: synthetic_5
+data:
+  source: synthetic
+strategy:
+  name: sma_cross
+  params: { fast: 10, slow: 30 }
+risk:
+  max_weight_per_symbol: 0.25
+backtest:
+  start: 2022-01-01
+  end: 2025-12-31
+  initial_cash: 100000
+display_tz: Asia/Bangkok

@@ -1,0 +1,27 @@
+# Top 20 spot pairs by market cap on Binance, as of 2026-11-05.
+# A static list has survivorship bias: coins that died before today are not here. Point-in-time
+# universes are a v2 item (see docs/KNOWLEDGE_BASE.md).
+market: crypto
+as_of: "2026-11-05"
+note: "Owner to confirm (OWNER_TODO). Stablecoins excluded."
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - BNB/USDT
+  - SOL/USDT
+  - XRP/USDT
+  - ADA/USDT
+  - DOGE/USDT
+  - TRX/USDT
+  - AVAX/USDT
+  - LINK/USDT
+  - DOT/USDT
+  - TON/USDT
+  - LTC/USDT
+  - BCH/USDT
+  - NEAR/USDT
+  - UNI/USDT
+  - APT/USDT
+  - ATOM/USDT
+  - ETC/USDT
+  - FIL/USDT

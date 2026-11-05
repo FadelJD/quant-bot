@@ -1,0 +1,23 @@
+market: equities
+timeframe: 1d
+universe: us_large_cap_30
+adapter:
+  kind: alpaca        # paper-api.alpaca.markets only; keys from APCA_API_KEY_ID / APCA_API_SECRET_KEY
+data:
+  source: alpaca
+  allow_gaps: true
+strategy:
+  name: boll_revert
+  params: { window: 20, k: 2.0, rsi_entry: 30, max_hold_bars: 10 }
+risk:
+  max_weight_per_symbol: 0.2
+backtest:
+  start: 2024-01-01
+  end: 2025-12-31
+  initial_cash: 100000
+  fees: { rate_bps: 2 }
+live:
+  daily_report_time: "08:00"
+notify:
+  kind: auto
+display_tz: Asia/Bangkok

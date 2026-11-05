@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kestrel report: {{ result.strategy }} {{ result.run_id }}</title>
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#666; --line:#e5e7eb; --pass:#16a34a; --caution:#d97706; --fail:#dc2626; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; padding:16px; background:var(--bg); color:var(--fg); max-width:1100px; margin-inline:auto; }
+  h1 { font-size:1.4rem; margin:0 0 8px; } h2 { font-size:1.1rem; margin:24px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+  .banner { padding:14px 16px; border-radius:8px; color:#fff; font-weight:600; margin:12px 0; }
+  .banner.pass { background:var(--pass);} .banner.caution { background:var(--caution);} .banner.fail { background:var(--fail);} .banner.none { background:#6b7280; }
+  .banner ul { margin:6px 0 0; padding-left:18px; font-weight:400; }
+  table { border-collapse:collapse; width:100%; font-size:0.9rem; } th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); } th { color:var(--muted); font-weight:500; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:8px; }
+  .kpi { border:1px solid var(--line); border-radius:8px; padding:10px; } .kpi .k { color:var(--muted); font-size:0.8rem; } .kpi .v { font-size:1.2rem; font-variant-numeric: tabular-nums; }
+  pre { background:#f6f6f6; padding:12px; overflow:auto; border-radius:6px; font-size:0.8rem; }
+  .muted { color:var(--muted); font-size:0.85rem; }
+  @media (max-width:600px) { body { padding:12px; } .grid { grid-template-columns: 1fr 1fr; } table { font-size:0.8rem; } }
+</style>
+</head>
+<body>
+<h1>kestrel: {{ result.strategy }} <span class="muted">{{ result.run_id }}</span></h1>
+<p class="muted">Generated {{ generated_at }} (UTC), displayed in {{ display_tz }}. Paper research only; nothing here is financial advice.</p>
+
+{% if validation %}
+<div class="banner {{ validation.verdict }}">Validation verdict: {{ validation.verdict | upper }}
+  <ul>{% for r in validation.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+</div>
+{% else %}
+<div class="banner none">No validation verdict. Run <code>kestrel validate</code>; a backtest number without a verdict is not to be trusted.</div>
+{% endif %}
+
+<h2>Headline metrics</h2>
+<div class="grid">
+{% for k in ["total_return","cagr","sharpe","sortino","max_drawdown","calmar","volatility","hit_rate","profit_factor","n_trades","turnover_annual","exposure","fees_pct_of_gross_pnl","clamped_shorts"] %}
+  <div class="kpi"><div class="k">{{ k }}</div><div class="v">{% set v = metrics[k] %}{% if v is number and k in ["total_return","cagr","max_drawdown","volatility","hit_rate","exposure","fees_pct_of_gross_pnl"] %}{{ "%.2f%%" | format(v*100) }}{% elif v is number %}{{ "%.3g" | format(v) }}{% else %}{{ v }}{% endif %}</div></div>
+{% endfor %}
+</div>
+
+{% for title, html in figures %}
+<h2>{{ title }}</h2>
+{{ html | safe }}
+{% endfor %}
+
+{% if metrics.by_regime %}
+<h2>Performance by regime</h2>
+<table><tr><th>regime</th><th>sharpe</th><th>total return</th><th>bars</th></tr>
+{% for k, v in metrics.by_regime.items() %}<tr><td>{{ k }}</td><td>{{ "%.2f" | format(v.sharpe) }}</td><td>{{ "%.2f%%" | format(v.total_return*100) }}</td><td>{{ v.n_bars | int }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+{% if validation and validation.walk_forward.windows %}
+<h2>Walk-forward</h2>
+<table><tr><th>IS</th><th>OOS</th><th>IS Sharpe</th><th>OOS Sharpe</th></tr>
+{% for w in validation.walk_forward.windows %}<tr><td>{{ w.is_start[:10] }} to {{ w.is_end[:10] }}</td><td>{{ w.oos_start[:10] }} to {{ w.oos_end[:10] }}</td><td>{{ "%.2f" | format(w.is_sharpe) }}</td><td>{{ "%.2f" | format(w.oos_sharpe) }}</td></tr>{% endfor %}
+</table>
+<p class="muted">OOS/IS ratio {{ "%.2f" | format(validation.walk_forward.oos_is_ratio) }}; {{ "%.0f%%" | format(validation.walk_forward.fraction_positive*100) }} of windows positive out of sample.</p>
+<h2>Monte Carlo and bootstrap</h2>
+<p>Trade-order shuffle: 5th percentile max drawdown {{ "%.2f%%" | format(validation.monte_carlo.p05_max_drawdown*100) }}, probability of ruin {{ "%.1f%%" | format(validation.monte_carlo.probability_of_ruin*100) }}. Block-bootstrap 95% CI on Sharpe: {{ "%.2f" | format(validation.bootstrap.ci_low) }} to {{ "%.2f" | format(validation.bootstrap.ci_high) }}. Deflated Sharpe probability {{ "%.3f" | format(validation.deflated_sharpe.dsr) }} over {{ validation.deflated_sharpe.n_trials | int }} trial(s).</p>
+{% endif %}
+
+<h2>Trades (first 500)</h2>
+<table><tr><th>signal</th><th>fill</th><th>symbol</th><th>side</th><th>qty</th><th>price</th><th>fee</th><th>slippage</th><th>reason</th><th>realised</th></tr>
+{% for t in trades %}<tr><td>{{ t.ts_signal }}</td><td>{{ t.ts_fill }}</td><td>{{ t.symbol }}</td><td>{{ t.side }}</td><td>{{ "%.4f" | format(t.qty) }}</td><td>{{ "%.2f" | format(t.price) }}</td><td>{{ "%.2f" | format(t.fee) }}</td><td>{{ "%.2f" | format(t.slippage_cost) }}</td><td>{{ t.reason }}</td><td>{{ "%.2f" | format(t.realised_pnl) }}</td></tr>{% endfor %}
+</table>
+
+<h2>Configuration</h2>
+<pre>{{ result.config | tojson(indent=2) }}</pre>
+{% if manifest %}<h2>Data manifest</h2><pre>{{ manifest | tojson(indent=2) }}</pre>{% endif %}
+</body>
+</html>
