@@ -22,7 +22,8 @@ D08, D14, D15, D16 in the register. `uv.lock` has never been committed.
 
 1. **Branches.** Create `develop` from `claude/new-session-u3eief` and push it. All later lanes
    branch from `develop`.
-2. **Spec in the repo.** Commit the build spec verbatim as `docs/SPEC.md`. Fix the README pointer.
+2. **Spec in the repo.** `docs/SPEC.md` was committed with these plans. Confirm it is intact and
+   fix the README pointer to it.
 3. **Lock and pin.** Commit `uv.lock`. Confirm `uv sync --all-extras` on Python 3.11 and 3.12.
    Confirm the core installs without `[ml]` (`uv sync` then `import kestrel.cli`).
 4. **Mechanical cleanup (D14).** `ruff format .`, `ruff check --fix`, then hand-fix the rest.

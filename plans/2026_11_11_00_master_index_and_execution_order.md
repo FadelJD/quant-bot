@@ -19,7 +19,7 @@ agent per lane. Every lane owns a disjoint set of files, so lanes in a wave neve
 | `kestrel backtest` on `quickstart_synthetic.yaml` | Runs in 4 s, writes report and metrics. |
 | `kestrel validate` on the same | Runs in 34 s, verdict `fail` (plausible for a random walk). |
 | Tests | None exist. Only `tests/fixtures/overfit_strategy.py`. |
-| Docs | Stubs. Spec is not in the repo. |
+| Docs | Stubs. Spec committed with these plans as `docs/SPEC.md`. |
 
 So the skeleton is a working draft, not a pile of syntax errors. The work left is hardening,
 closing spec gaps, wiring, docs, tests, release.
@@ -157,7 +157,7 @@ Close it there and cite the id in the handoff note.
 | D13 | A halt set from the CLI or Telegram only sets a flag; the loop never flattens on seeing it | 03b |
 | D14 | 34 mypy errors, 385 ruff findings, 46 unformatted files | 01 |
 | D15 | No `uv.lock`, no `.secrets.baseline` (CI secrets step would fail), no Dockerfile or compose | 01, 04b |
-| D16 | Spec is not in the repo; README points at a path that does not exist | 01 |
+| D16 | README points at a spec path that does not exist (the spec is now at `docs/SPEC.md`) | 01 |
 | D17 | `run` uses a bare loop; APScheduler wiring and weekly report are unreachable | 03b |
 | D18 | Backtest warm-up counts merged-calendar bars, not per-symbol history; late-listed symbols get NaN features silently | 02c |
 | D19 | Slippage uses the fill bar's own volume, a mild lookahead | 02c |
@@ -168,7 +168,7 @@ Close it there and cite the id in the handoff note.
 | D24 | Reports are not byte-identical across runs (`generated_at` inside validation and HTML) | 03a, 03c |
 | D25 | Mock paper run in `cli.run` builds a price feed that refetches bars on every quote | 04a |
 
-## 9. Additions beyond the spec (owner to confirm; default is include)
+## 9. Additions beyond the spec (all ten confirmed by the owner on 2026-11-11)
 
 Small, each inside one lane, each making the tool more honest or easier to operate.
 
